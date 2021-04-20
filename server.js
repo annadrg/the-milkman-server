@@ -1,12 +1,5 @@
-// const express = require('express')
-// const http = require('http');
-// const app = express();
-// const server = http.createServer(app);
-// const socket = require('socket.io')
-
-
-
-// server.listen(4000);
+const {createGameState, gameLoop, getUpdatedVelocity} = require('./game')
+const {FRAME_RATE} = require('./constants')
 
 
 const express = require('express')
@@ -17,7 +10,7 @@ const app = express()
 const server = http.createServer(app)
 const options = {
   cors: {
-    origin: 'http://localhost:8080',
+    origin: 'http://127.0.0.1:8080',
     methods: ['GET', 'POST']
   }
 }
@@ -37,10 +30,41 @@ function onConnect (socket) {
 //io.on('connection', onConnect)
 
 io.on('connection', client => {
-    client.emit('init', {data: 'Hello'})
+    const state = createGameState()
+
+    client.on('keydown', handleKeyDown)
+
+    function handleKeyDown (keyCode) {
+        try {
+            keyCode = parseInt(keyCode)
+        } catch(e){
+            console.error(e)
+        }
+
+        const vel = getUpdatedVelocity(keyCode)
+
+        if(vel) {
+            state.player.vel = vel
+        }
+    }
+    startGameInterval(client, state)
 })
 
-const port = 3001
+function startGameInterval (client, state){
+    const intervalId = setInterval(()=>{
+        const winner = gameLoop(state)
+
+        if(!winner){
+            client.emit('gameState', JSON.stringify(state))
+            //console.log('game state')
+        } else {
+            client.emit('gameOver')
+            clearInterval(intervalId)
+        }
+    }, 1000/FRAME_RATE)
+}
+
+const port = 3000
 
 function onListen () {
   console.log(`Listening on ${port}`)
