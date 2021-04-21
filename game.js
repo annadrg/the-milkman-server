@@ -130,19 +130,47 @@ function randomFood(state) {
   state.food = food;
 }
 
-function getUpdatedVelocity(keyCode) {
+
+function getUpdatedVelocity(keyCode, state, roomName) {
+  //console.log('this is the state',state[roomName].players)
   switch (keyCode) {
     case 37: { // left
-      return { x: -1, y: 0 };
+      for (let player of state[roomName].players){
+        //console.log('players Vel:', player.vel, player.vel.x === 1 && player.vel.y === 0 )
+        if (player.vel.x === 1 && player.vel.y === 0 ){
+          return { x: 1, y: 0 }
+        } else {
+          return { x: -1, y: 0 };
+        }
+      } 
     }
     case 38: { // down
-      return { x: 0, y: -1 };
-    }
+      for (let player of state[roomName].players){
+        if(player.vel.x === 0 && player.vel.y === 1){
+          return { x: 0, y: 1 }
+        } else {
+          return { x: 0, y: -1 };
+        }
+      }
+    } 
     case 39: { // right
-      return { x: 1, y: 0 };
+      for (let player of state[roomName].players){
+        if(player.vel.x === -1 && player.vel.y === 0){
+          return {x:-1, y:0}
+        } else {
+          return { x: 1, y: 0 };
+        }
+      }
     }
     case 40: { // up
-      return { x: 0, y: 1 };
+        for (let player of state[roomName].players){
+        if(player.vel.x === 0 && player.vel.y === -1){
+          return {x:0, y:-1}
+        } else {
+          return { x: 0, y: 1 };
+        }
+      }
     }
   }
 }
+
