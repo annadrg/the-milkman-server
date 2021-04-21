@@ -155,10 +155,10 @@ function emitScore(room, players) {
   io.sockets.in(room).emit("gameScore", JSON.stringify(players));
 }
 
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 function onListen() {
-  console.log(`Listening on ${port}`);
+  console.log(`Listening on ${PORT}`);
 }
 // Start the app
-server.listen(port, onListen);
+server.listen(PORT, onListen);
