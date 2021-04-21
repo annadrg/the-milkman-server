@@ -101,10 +101,10 @@ function startGameInterval(roomName) {
   const intervalId = setInterval(() => {
     const winner = gameLoop(state[roomName]);
 
-    emitScore(roomName, state[roomName].players)
     
     if (!winner) {
       emitGameState(roomName, state[roomName])
+      emitScore(roomName, state[roomName].players)
     } else {
       emitGameOver(roomName, winner);
       state[roomName] = null;
