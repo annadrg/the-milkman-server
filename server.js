@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const options = {
   cors: {
-    origin: "https://milkmansnake.netlify.app/",
+    origin: "https://milkmansnake.netlify.app",
     methods: ["GET", "POST"],
   },
 };
