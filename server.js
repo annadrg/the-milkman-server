@@ -37,24 +37,21 @@ io.on('connection', client => {
   client.on('joinGame', handleJoinGame);
 
   function handleJoinGame(roomName) {
-    console.log(roomName)
-    const room = io.sockets.adapter.rooms[roomName];
-    console.log('this is room', io.sockets.adapter.rooms[roomName])
+    console.log('this is the room name', typeof(roomName)) 
+    const room = io.of('/').adapter.rooms.get(roomName);
+    console.log('this is just io.sockets.adapter.rooms', io.of('/').adapter.rooms)
     console.log('room is:', room)
     let allUsers;
+    
     if (room) {
-      allUsers = room.sockets;
+      allUsers = room.size;
+      console.log('get all users', allUsers)
     }
 
-    let numClients = 0;
-    if (allUsers) {
-      numClients = Object.keys(allUsers).length;
-    }
-
-    if (numClients === 0) {
+    if (allUsers === 0) {
       client.emit('unknownCode');
       return;
-    } else if (numClients > 1) {
+    } else if (allUsers > 1) {
       client.emit('tooManyPlayers');
       return;
     }

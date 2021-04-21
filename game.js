@@ -20,7 +20,7 @@ function createGameState() {
         y: 10,
       },
       vel: {
-        x: 1,
+        x: 0,
         y: 0,
       },
       snake: [
@@ -30,7 +30,7 @@ function createGameState() {
       ],
     }, {
       pos: {
-        x: 18,
+        x: 16,
         y: 10,
       },
       vel: {
@@ -38,9 +38,9 @@ function createGameState() {
         y: 0,
       },
       snake: [
-        {x: 20, y: 10},
-        {x: 19, y: 10},
         {x: 18, y: 10},
+        {x: 17, y: 10},
+        {x: 16, y: 10},
       ],
     }],
     food: {},
