@@ -1,58 +1,49 @@
-const {gameLoop, getUpdatedVelocity, initGame} = require('./game')
-const {FRAME_RATE} = require('./constants')
+const { gameLoop, getUpdatedVelocity, initGame } = require("./game");
+const { FRAME_RATE } = require("./constants");
+const formatMessage = require("./messages");
+const { playerJoin, playerLeave, getCurrentplayer } = require("./players");
 
-const express = require('express')
-const http = require('http')
-const { makeid } = require('./utils')
+const express = require("express");
+const http = require("http");
+const { makeid } = require("./utils");
 
-const app = express()
-const server = http.createServer(app)
+const app = express();
+const server = http.createServer(app);
 const options = {
   cors: {
-    origin: 'http://127.0.0.1:8080',
-    methods: ['GET', 'POST']
-  }
-}
+    origin: "http://127.0.0.1:8080",
+    methods: ["GET", "POST"],
+  },
+};
 
-const io = require('socket.io')(server, options)
-
-
-function onConnect (socket) {
-  socket.on('disconnect', () => {
-    console.log('user disconnected')
-  })
-
-  socket.on('message', message => {
-    io.emit('message', message)
-  })
-}
+const io = require("socket.io")(server, options);
 
 const state = {};
 const clientRooms = {};
 
-io.on('connection', client => {
+const botName = "The Milkman";
 
-  client.on('keydown', handleKeydown);
-  client.on('newGame', handleNewGame);
-  client.on('joinGame', handleJoinGame);
+io.on("connection", (client) => {
+  client.on("keydown", handleKeydown);
+  client.on("newGame", handleNewGame);
+  client.on("joinGame", handleJoinGame);
+  client.on("chatMessage", handleChatMessage);
+  client.on("disconnect", handleDisconnect);
 
-  function handleJoinGame(roomName) {
-    console.log('this is the room name', typeof(roomName)) 
-    const room = io.of('/').adapter.rooms.get(roomName);
-    console.log('this is just io.sockets.adapter.rooms', io.of('/').adapter.rooms)
-    console.log('room is:', room)
+  function handleJoinGame(playerName, roomName) {
+    const room = io.of("/").adapter.rooms.get(roomName);
+
     let allUsers;
-    
+
     if (room) {
       allUsers = room.size;
-      console.log('get all users', allUsers)
     }
 
     if (allUsers === 0) {
-      client.emit('unknownCode');
+      client.emit("unknownCode");
       return;
     } else if (allUsers > 1) {
-      client.emit('tooManyPlayers');
+      client.emit("tooManyPlayers");
       return;
     }
 
@@ -60,21 +51,39 @@ io.on('connection', client => {
 
     client.join(roomName);
     client.number = 2;
-    client.emit('init', 2);
-    
+    client.emit("init", 2);
+
+    const player = playerJoin(client.id, playerName, roomName);
+
+    // Welcome current player
+    client.emit("message", formatMessage(botName, "Welcome to The Milkman!"));
+
+    // Broadcast when a player connects
+    client.broadcast
+      .to(player.room)
+      .emit(
+        "message",
+        formatMessage(botName, `${player.playername} has joined the game`)
+      );
+
     startGameInterval(roomName);
   }
 
-  function handleNewGame() {
+  function handleNewGame(playerName) {
     let roomName = makeid(5);
     clientRooms[client.id] = roomName;
-    client.emit('gameCode', roomName);
+    client.emit("gameCode", roomName);
 
     state[roomName] = initGame();
 
     client.join(roomName);
     client.number = 1;
-    client.emit('init', 1);
+    client.emit("init", 1);
+
+    const player = playerJoin(client.id, playerName, roomName);
+
+    // Welcome current player
+    client.emit("message", formatMessage(botName, "Welcome to The Milkman!"));
   }
 
   function handleKeydown(keyCode) {
@@ -84,7 +93,7 @@ io.on('connection', client => {
     }
     try {
       keyCode = parseInt(keyCode);
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       return;
     }
@@ -95,16 +104,36 @@ io.on('connection', client => {
       state[roomName].players[client.number - 1].vel = vel;
     }
   }
+
+  function handleChatMessage(message) {
+    const player = getCurrentplayer(client.id);
+
+    io.to(player.room).emit(
+      "message",
+      formatMessage(player.playername, message)
+    );
+  }
+
+  function handleDisconnect() {
+    const player = playerLeave(client.id);
+
+    if (player) {
+      io.to(player.room).emit(
+        "message",
+        formatMessage(botName, `${player.playername} has left the game`)
+      );
+    }
+  }
 });
 
 function startGameInterval(roomName) {
   const intervalId = setInterval(() => {
     const winner = gameLoop(state[roomName]);
 
-    emitScore(roomName, state[roomName].players)
-    
+    emitScore(roomName, state[roomName].players);
+
     if (!winner) {
-      emitGameState(roomName, state[roomName])
+      emitGameState(roomName, state[roomName]);
     } else {
       emitGameOver(roomName, winner);
       state[roomName] = null;
@@ -115,24 +144,21 @@ function startGameInterval(roomName) {
 
 function emitGameState(room, gameState) {
   // Send this event to everyone in the room.
-  io.sockets.in(room)
-    .emit('gameState', JSON.stringify(gameState));
+  io.sockets.in(room).emit("gameState", JSON.stringify(gameState));
 }
 
 function emitGameOver(room, winner) {
-  io.sockets.in(room)
-    .emit('gameOver', JSON.stringify({ winner }));
+  io.sockets.in(room).emit("gameOver", JSON.stringify({ winner }));
 }
 
-function emitScore (room, players){
-  io.sockets.in(room)
-    .emit('gameScore', JSON.stringify(players))
+function emitScore(room, players) {
+  io.sockets.in(room).emit("gameScore", JSON.stringify(players));
 }
 
-const port = 3000
+const port = 3000;
 
-function onListen () {
-  console.log(`Listening on ${port}`)
+function onListen() {
+  console.log(`Listening on ${port}`);
 }
 // Start the app
-server.listen(port, onListen)
+server.listen(port, onListen);
