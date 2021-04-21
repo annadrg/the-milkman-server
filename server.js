@@ -100,6 +100,8 @@ io.on('connection', client => {
 function startGameInterval(roomName) {
   const intervalId = setInterval(() => {
     const winner = gameLoop(state[roomName]);
+
+    emitScore(roomName, state[roomName].players)
     
     if (!winner) {
       emitGameState(roomName, state[roomName])
@@ -120,6 +122,11 @@ function emitGameState(room, gameState) {
 function emitGameOver(room, winner) {
   io.sockets.in(room)
     .emit('gameOver', JSON.stringify({ winner }));
+}
+
+function emitScore (room, players){
+  io.sockets.in(room)
+    .emit('gameScore', JSON.stringify(players))
 }
 
 const port = 3000
