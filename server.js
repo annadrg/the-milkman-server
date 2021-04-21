@@ -89,7 +89,7 @@ io.on('connection', client => {
       return;
     }
 
-    const vel = getUpdatedVelocity(keyCode);
+    const vel = getUpdatedVelocity(keyCode, state, roomName);
 
     if (vel) {
       state[roomName].players[client.number - 1].vel = vel;
