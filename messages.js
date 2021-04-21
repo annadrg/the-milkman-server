@@ -4,7 +4,7 @@ function formatMessage(playername, text) {
   return {
     playername,
     text,
-    time: moment().format("h:mm a"),
+    time: moment().format("H:mm"),
   };
 }
 
