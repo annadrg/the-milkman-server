@@ -1,58 +1,58 @@
-const {gameLoop, getUpdatedVelocity, initGame} = require('./game')
-const {FRAME_RATE} = require('./constants')
+const express = require("express");
+const http = require("http");
+const { makeid } = require("./utils");
+const { gameLoop, getUpdatedVelocity, initGame } = require("./game");
+const { FRAME_RATE } = require("./constants");
 
-const express = require('express')
-const http = require('http')
-const { makeid } = require('./utils')
-
-const app = express()
-const server = http.createServer(app)
+const app = express();
+const server = http.createServer(app);
 const options = {
   cors: {
-    origin: 'http://127.0.0.1:8080',
-    methods: ['GET', 'POST']
-  }
-}
+    origin: "http://127.0.0.1:8080",
+    methods: ["GET", "POST"],
+  },
+};
 
-const io = require('socket.io')(server, options)
+const io = require("socket.io")(server, options);
 
+function onConnect(socket) {
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
 
-function onConnect (socket) {
-  socket.on('disconnect', () => {
-    console.log('user disconnected')
-  })
-
-  socket.on('message', message => {
-    io.emit('message', message)
-  })
+  socket.on("message", (message) => {
+    io.emit("message", message);
+  });
 }
 
 const state = {};
 const clientRooms = {};
 
-io.on('connection', client => {
-
-  client.on('keydown', handleKeydown);
-  client.on('newGame', handleNewGame);
-  client.on('joinGame', handleJoinGame);
+io.on("connection", (client) => {
+  client.on("keydown", handleKeydown);
+  client.on("newGame", handleNewGame);
+  client.on("joinGame", handleJoinGame);
 
   function handleJoinGame(roomName) {
-    console.log('this is the room name', typeof(roomName)) 
-    const room = io.of('/').adapter.rooms.get(roomName);
-    console.log('this is just io.sockets.adapter.rooms', io.of('/').adapter.rooms)
-    console.log('room is:', room)
+    console.log("this is the room name", typeof roomName);
+    const room = io.of("/").adapter.rooms.get(roomName);
+    console.log(
+      "this is just io.sockets.adapter.rooms",
+      io.of("/").adapter.rooms
+    );
+    console.log("room is:", room);
     let allUsers;
-    
+
     if (room) {
       allUsers = room.size;
-      console.log('get all users', allUsers)
+      console.log("get all users", allUsers);
     }
 
     if (allUsers === 0) {
-      client.emit('unknownCode');
+      client.emit("unknownCode");
       return;
     } else if (allUsers > 1) {
-      client.emit('tooManyPlayers');
+      client.emit("tooManyPlayers");
       return;
     }
 
@@ -60,21 +60,21 @@ io.on('connection', client => {
 
     client.join(roomName);
     client.number = 2;
-    client.emit('init', 2);
-    
+    client.emit("init", 2);
+
     startGameInterval(roomName);
   }
 
   function handleNewGame() {
     let roomName = makeid(5);
     clientRooms[client.id] = roomName;
-    client.emit('gameCode', roomName);
+    client.emit("gameCode", roomName);
 
     state[roomName] = initGame();
 
     client.join(roomName);
     client.number = 1;
-    client.emit('init', 1);
+    client.emit("init", 1);
   }
 
   function handleKeydown(keyCode) {
@@ -84,7 +84,7 @@ io.on('connection', client => {
     }
     try {
       keyCode = parseInt(keyCode);
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       return;
     }
@@ -100,9 +100,9 @@ io.on('connection', client => {
 function startGameInterval(roomName) {
   const intervalId = setInterval(() => {
     const winner = gameLoop(state[roomName]);
-    
+
     if (!winner) {
-      emitGameState(roomName, state[roomName])
+      emitGameState(roomName, state[roomName]);
     } else {
       emitGameOver(roomName, winner);
       state[roomName] = null;
@@ -113,19 +113,17 @@ function startGameInterval(roomName) {
 
 function emitGameState(room, gameState) {
   // Send this event to everyone in the room.
-  io.sockets.in(room)
-    .emit('gameState', JSON.stringify(gameState));
+  io.sockets.in(room).emit("gameState", JSON.stringify(gameState));
 }
 
 function emitGameOver(room, winner) {
-  io.sockets.in(room)
-    .emit('gameOver', JSON.stringify({ winner }));
+  io.sockets.in(room).emit("gameOver", JSON.stringify({ winner }));
 }
 
-const port = 3000
+const port = 3000;
 
-function onListen () {
-  console.log(`Listening on ${port}`)
+function onListen() {
+  console.log(`Listening on ${port}`);
 }
 // Start the app
-server.listen(port, onListen)
+server.listen(port, onListen);
