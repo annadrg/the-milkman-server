@@ -88,6 +88,23 @@ function gameLoop(state) {
     randomFood(state);
   }
 
+  //snake hit another snake
+  if (playerOne.pos.x || playerOne.pos.y) {
+    for (let cell of playerOne.snake) {
+      if (cell.x === playerTwo.pos.x && cell.y === playerTwo.pos.y) {
+        return 1;
+      }
+    }
+  }
+
+  if (playerTwo.pos.x || playerTwo.pos.y) {
+    for (let cell of playerTwo.snake) {
+      if (cell.x === playerOne.pos.x && cell.y === playerOne.pos.y) {
+        return 2;
+      }
+    }
+  }
+
   if (playerOne.vel.x || playerOne.vel.y) {
     for (let cell of playerOne.snake) {
       if (cell.x === playerOne.pos.x && cell.y === playerOne.pos.y) {
@@ -134,6 +151,8 @@ function randomFood(state) {
 
   state.food = food;
 }
+
+
 
 
 function getUpdatedVelocity(keyCode, state, roomName) {
