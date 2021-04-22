@@ -143,7 +143,7 @@ io.on("connection", (client) => {
         emitGameState(roomName, state[roomName]);
         emitScore(roomName, state[roomName].players);
       } else {
-        if (client.number === 1) {
+        if (client.number === 2) {
           client.emit("showPlayAgain");
         }
         emitGameOver(roomName, winner, state[roomName]);
