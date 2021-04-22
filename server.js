@@ -58,16 +58,11 @@ io.on("connection", (client) => {
 
     const player = playerJoin(client.id, playerName, roomName);
 
-    // Welcome current player
-    client.emit("message", formatMessage(botName, "Welcome to The Milkman!"));
-
     // Broadcast when a player connects
-    client.broadcast
-      .to(player.room)
-      .emit(
-        "message",
-        formatMessage(botName, `${player.playername} has joined the game`)
-      );
+    io.in(player.room).emit(
+      "message",
+      formatMessage(botName, `${player.playername} has joined as Player 2`)
+    );
 
     startGameInterval(roomName);
   }
@@ -87,7 +82,10 @@ io.on("connection", (client) => {
     const player = playerJoin(client.id, playerName, roomName);
 
     // Welcome current player
-    client.emit("message", formatMessage(botName, "Welcome to The Milkman!"));
+    client.emit(
+      "message",
+      formatMessage(botName, `${player.playername} has joined as Player 1`)
+    );
   }
 
   function handleRestartGame() {
