@@ -134,25 +134,22 @@ io.on("connection", (client) => {
       );
     }
   }
-
-  function startGameInterval(roomName) {
-    const intervalId = setInterval(() => {
-      const winner = gameLoop(state[roomName]);
-
-      if (!winner) {
-        emitGameState(roomName, state[roomName]);
-        emitScore(roomName, state[roomName].players);
-      } else {
-        if (client.number === 2) {
-          client.emit("showPlayAgain");
-        }
-        emitGameOver(roomName, winner, state[roomName]);
-        //state[roomName] = null;
-        clearInterval(intervalId);
-      }
-    }, 1000 / FRAME_RATE);
-  }
 });
+
+function startGameInterval(roomName) {
+  const intervalId = setInterval(() => {
+    const winner = gameLoop(state[roomName]);
+
+    if (!winner) {
+      emitGameState(roomName, state[roomName]);
+      emitScore(roomName, state[roomName].players);
+    } else {
+      emitGameOver(roomName, winner, state[roomName]);
+      //state[roomName] = null;
+      clearInterval(intervalId);
+    }
+  }, 1000 / FRAME_RATE);
+}
 
 function emitGameState(room, gameState) {
   // Send this event to everyone in the room.
