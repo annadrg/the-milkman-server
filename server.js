@@ -11,6 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const options = {
   cors: {
+    // origin: "http://127.0.0.1:8080",
     origin: "https://milkmansnake.netlify.app",
     methods: ["GET", "POST"],
   },
@@ -29,6 +30,8 @@ io.on("connection", (client) => {
   client.on("joinGame", handleJoinGame);
   client.on("chatMessage", handleChatMessage);
   client.on("disconnect", handleDisconnect);
+  client.on("restartGame", handleRestartGame);
+
 
   function handleJoinGame(playerName, roomName) {
     const room = io.of("/").adapter.rooms.get(roomName);
@@ -75,6 +78,7 @@ io.on("connection", (client) => {
     client.emit("gameCode", roomName);
 
     state[roomName] = initGame();
+    state[roomName].gameActive = true
 
     client.join(roomName);
     client.number = 1;
@@ -86,9 +90,16 @@ io.on("connection", (client) => {
     client.emit("message", formatMessage(botName, "Welcome to The Milkman!"));
   }
 
+  function handleRestartGame(){
+    const roomName = clientRooms[client.id]
+    state[roomName] = initGame()
+    state[roomName].gameActive = true
+    startGameInterval(roomName);
+  }
+
   function handleKeydown(keyCode) {
     const roomName = clientRooms[client.id];
-    if (!roomName) {
+    if (!state[roomName]) {
       return;
     }
     try {
@@ -97,6 +108,7 @@ io.on("connection", (client) => {
       console.error(e);
       return;
     }
+
 
     const vel = getUpdatedVelocity(keyCode, state, roomName);
 
@@ -130,16 +142,16 @@ function startGameInterval(roomName) {
   const intervalId = setInterval(() => {
     const winner = gameLoop(state[roomName]);
 
-    
     if (!winner) {
       emitGameState(roomName, state[roomName])
       emitScore(roomName, state[roomName].players)
     } else {
-      emitGameOver(roomName, winner);
-      state[roomName] = null;
+      emitGameOver(roomName, winner, state[roomName]);
+      //state[roomName] = null;
       clearInterval(intervalId);
     }
   }, 1000 / FRAME_RATE);
+  
 }
 
 function emitGameState(room, gameState) {
@@ -147,7 +159,8 @@ function emitGameState(room, gameState) {
   io.sockets.in(room).emit("gameState", JSON.stringify(gameState));
 }
 
-function emitGameOver(room, winner) {
+function emitGameOver(room, winner, state) {
+  state.gameActive = false
   io.sockets.in(room).emit("gameOver", JSON.stringify({ winner }));
 }
 

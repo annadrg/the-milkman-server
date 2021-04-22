@@ -47,6 +47,7 @@ function createGameState() {
     }],
     food: {},
     gridsize: GRID_SIZE,
+    gameActive: false
   };
 }
 
@@ -153,10 +154,8 @@ function randomFood(state) {
 }
 
 
-
-
 function getUpdatedVelocity(keyCode, state, roomName) {
-  //console.log('this is the state',state[roomName].players)
+  //console.log(state[roomName])
   switch (keyCode) {
     case 37: { // left
       for (let player of state[roomName].players){
