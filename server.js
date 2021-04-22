@@ -22,13 +22,14 @@ const io = require("socket.io")(server, options);
 const state = {};
 const clientRooms = {};
 
-const botName = "The Milkman";
+const botName = "The Milkman Bot";
 
 io.on("connection", (client) => {
   client.on("keydown", handleKeydown);
   client.on("newGame", handleNewGame);
   client.on("joinGame", handleJoinGame);
   client.on("chatMessage", handleChatMessage);
+  client.on("winnerMessage", handleWinnerMessage);
   client.on("disconnect", handleDisconnect);
   client.on("restartGame", handleRestartGame);
 
@@ -121,6 +122,15 @@ io.on("connection", (client) => {
     io.to(player.room).emit(
       "message",
       formatMessage(player.playername, message)
+    );
+  }
+
+  function handleWinnerMessage() {
+    const player = getCurrentplayer(client.id);
+
+    io.to(player.room).emit(
+      "message",
+      formatMessage(botName, `${player.playername} won!`)
     );
   }
 
