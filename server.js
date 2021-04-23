@@ -12,7 +12,7 @@ const server = http.createServer(app);
 const options = {
   cors: {
     // origin: "http://127.0.0.1:8080",
-    origin: "https://milkmansnake.netlify.app",
+    origin: "https://themilkmangame.netlify.app/",
     methods: ["GET", "POST"],
   },
 };
