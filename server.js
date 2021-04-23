@@ -70,7 +70,7 @@ io.on("connection", (client) => {
     // Broadcast when a player connects
     io.in(player.room).emit(
       "message",
-      formatMessage(botName, `${player.playername} has joined as Player 2`)
+      formatMessage(botName, `${player.playername} has joined the game`)
     );
 
     startGameInterval(roomName);
@@ -95,7 +95,7 @@ io.on("connection", (client) => {
     // Welcome current player
     client.emit(
       "message",
-      formatMessage(botName, `${player.playername} has joined as Player 1`)
+      formatMessage(botName, `${player.playername} has joined the game`)
     );
   }
 
