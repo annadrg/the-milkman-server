@@ -2,7 +2,7 @@ const players = [];
 
 //Join player to room
 function playerJoin(id, playername, room) {
-  const player = { id, playername, room };
+  const player = { id, playername, room, timesWon: 0 };
 
   players.push(player);
 
@@ -28,9 +28,18 @@ function getRoomplayers(room) {
   return players.filter((player) => player.room === room);
 }
 
+function playerWon(id) {
+  const playerWon = players.findIndex((player) => player.id === id);
+  players[playerWon] = {
+    ...players[playerWon],
+    timesWon: players[playerWon].timesWon + 1,
+  };
+}
+
 module.exports = {
   playerJoin,
   getCurrentplayer,
   playerLeave,
   getRoomplayers,
+  playerWon,
 };

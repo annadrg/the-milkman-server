@@ -6,6 +6,7 @@ const {
   playerLeave,
   getCurrentplayer,
   getRoomplayers,
+  playerWon,
 } = require("./players");
 
 const express = require("express");
@@ -37,6 +38,7 @@ io.on("connection", (client) => {
   client.on("winnerMessage", handleWinnerMessage);
   client.on("disconnect", handleDisconnect);
   client.on("restartGame", handleRestartGame);
+  client.on("playerWon", handlePlayerWon);
 
   function handleJoinGame(playerName, roomName) {
     const room = io.of("/").adapter.rooms.get(roomName);
@@ -133,9 +135,15 @@ io.on("connection", (client) => {
     );
   }
 
+  function handlePlayerWon() {
+    playerWon(client.id);
+    const player = getCurrentplayer(client.id);
+    const players = getRoomplayers(player.room);
+    io.to(player.room).emit("playerWins", JSON.stringify(players));
+  }
+
   function handleWinnerMessage() {
     const player = getCurrentplayer(client.id);
-
     io.to(player.room).emit(
       "message",
       formatMessage(botName, `${player.playername} won!`)
