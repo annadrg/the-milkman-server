@@ -1,7 +1,12 @@
 const { gameLoop, getUpdatedVelocity, initGame } = require("./game");
 const { FRAME_RATE } = require("./constants");
 const formatMessage = require("./messages");
-const { playerJoin, playerLeave, getCurrentplayer } = require("./players");
+const {
+  playerJoin,
+  playerLeave,
+  getCurrentplayer,
+  getRoomplayers,
+} = require("./players");
 
 const express = require("express");
 const http = require("http");
@@ -57,6 +62,8 @@ io.on("connection", (client) => {
     client.emit("init", 2);
 
     const player = playerJoin(client.id, playerName, roomName);
+    const players = getRoomplayers(roomName);
+    io.sockets.in(roomName).emit("playersNames", JSON.stringify(players));
 
     // Broadcast when a player connects
     io.in(player.room).emit(
@@ -80,7 +87,9 @@ io.on("connection", (client) => {
     client.emit("init", 1);
 
     const player = playerJoin(client.id, playerName, roomName);
-
+    const players = getRoomplayers(roomName);
+    console.log("players new game ", players);
+    io.sockets.in(roomName).emit("playersNames", JSON.stringify(players));
     // Welcome current player
     client.emit(
       "message",
