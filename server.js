@@ -91,6 +91,7 @@ io.on("connection", (client) => {
   function handleRestartGame() {
     const roomName = clientRooms[client.id];
     state[roomName] = initGame();
+    io.sockets.in(roomName).emit("gameActive");
     state[roomName].gameActive = true;
     startGameInterval(roomName);
   }
